@@ -1,0 +1,96 @@
+- name: web security group
+  ec2_group:
+    name: web
+    description: allow http and https access
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 8888
+        to_port: 8888
+        cidr_ip: 0.0.0.0/0
+
+- name: ssh security group
+  ec2_group:
+    name: ssh
+    description: allow ssh access
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+
+- name: spark security group
+  ec2_group:
+    name: spark
+    description: allow spark protocol
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 4040
+        to_port: 4041
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 6066
+        to_port: 6066
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 7077
+        to_port: 7077
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 8080
+        to_port: 8081
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        # from_port: "{{ spark_worker_port }}"
+        # to_port: "{{ spark_worker_port_end }}"
+        from_port: 1
+        to_port: 65535
+        cidr_ip: 172.16.0.0/12
+      - proto: udp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: 172.16.0.0/12
+
+- name: hadoop security group
+  ec2_group:
+    name: hadoop
+    description: allow hadoop protocol
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules:
+      - proto: tcp
+        from_port: 9000
+        to_port: 9001
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 50030
+        to_port: 50070
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 1
+        to_port: 65535
+        cidr_ip: 172.16.0.0/12
+  tags: hadoop
+
+- name: outbound security group
+  ec2_group:
+    name: outbound
+    description: allow outbound connections to the internet
+    region: "{{ region }}"
+    profile: "{{ boto_profile }}"
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0

@@ -1,0 +1,26 @@
+---
+region: us-west-2
+instance_type: m5.large
+slave_count: 2
+ec2_key_pair: ec2_key
+
+ec2_volume_size: 10
+
+boto_profile: default
+remote_user: ubuntu
+
+spark_download_url: https://www-us.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
+spark_version: 2.4.0-bin-hadoop2.7
+spark_root: /opt/spark
+# spark_worker_port: 37700
+# spark_worker_port_end: 37800
+
+hadoop_download_url: http://www-us.apache.org/dist/hadoop/common/hadoop-2.7.7/hadoop-2.7.7.tar.gz
+hadoop_version: 2.7.7
+hadoop_root: /opt/hadoop
+
+hbase_download_url: http://www-us.apache.org/dist/hbase/stable/hbase-1.2.2-bin.tar.gz
+hbase_version: 1.2.2
+hbase_root: /opt/hbase
+
+inventory_dir: /etc/ansible/ec2.py

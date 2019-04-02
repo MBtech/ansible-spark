@@ -1,0 +1,44 @@
+- name: Create instances on Amazon EC2
+  hosts: localhost
+  roles:
+  - create_spark_cluster
+
+- name: Install Python
+  hosts: tag_ds_tech_spark
+  gather_facts: False
+  tasks:
+    - name: Install Python
+      raw: sudo apt-get -y install python
+
+
+- name: Install spark
+  hosts: tag_ds_tech_spark
+  roles:
+  - common
+  - spark_common
+
+- name: Config spark master
+  hosts: tag_ds_role_spark_master
+  roles:
+  - common_standalone
+  - spark_master
+
+- name: Install Hadoop slaves
+  hosts: tag_ds_role_spark_slave
+  roles:
+  - { role: setup_hadoop, hadoop_type_of_node: slave}
+
+- name: Install Hadoop master
+  hosts: tag_ds_role_spark_master
+  roles:
+  - { role: setup_hadoop, hadoop_type_of_node: master}
+
+#- name: Install Hbase slave
+#  hosts: tag_ds_role_spark_slave
+#  roles:
+#  - { role: hbase, hbase_type_of_node: slave}
+
+#- name: Install Hbase Master
+#  hosts: tag_ds_role_spark_master
+#  roles:
+#  - { role: hbase, hbase_type_of_node: master}

@@ -1,0 +1,5 @@
+---
+# handlers file for common
+- name: restart cron
+  become: yes
+  command: service cron restart

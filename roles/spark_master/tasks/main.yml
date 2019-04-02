@@ -1,0 +1,87 @@
+---
+# tasks file for spark_master
+- name: generate RSA key for root
+  become: true
+  user: name=root generate_ssh_key=yes
+
+- name: download pub key
+  become: true
+  fetch: src=/root/.ssh/id_rsa.pub dest=/tmp/id_rsa.tmp flat=yes
+
+- name: authorize master key on slaves
+  local_action: shell cat /tmp/id_rsa.tmp | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+
+- name: authorize master key on itself
+  local_action: shell cat /tmp/id_rsa.tmp | ssh ubuntu@{{ hostvars.localhost.spark_master.tagged_instances[0].public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+
+- name: delete temporary file
+  local_action: file  path=/tmp/id_rsa.tmp state=absent
+
+- name: write SPARK_PUBLIC_DNS on master
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+  tags: config_spark
+
+- name: write SPARK_PUBLIC_DNS on slaves
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+  tags: config_spark
+
+- name: add all slaves to known_host
+  become: true
+  shell: ssh-keyscan -H {{ item.private_ip }} >> ~/.ssh/known_hosts
+  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+
+- name: add itself to known_host
+  become: true
+  shell: ssh-keyscan -H {{ item.private_dns_name }} >> ~/.ssh/known_hosts
+  with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+
+- name: add 0.0.0.0 (secondary namenode) to known_host
+  become: true
+  shell: ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts
+
+- name: populate conf/slaves file
+  become: true
+  template: src=conf/slaves.j2 dest={{ spark_root }}/conf/slaves
+  tags: config_spark
+
+- name: attempt to stop Spark workers
+  become: true
+  shell: "{{ spark_root }}/sbin/stop-all.sh"
+  tags: run
+
+- name: attempt to start Spark cluster
+  become: true
+  shell: "{{ spark_root }}/sbin/start-all.sh"
+  tags: run
+
+- name: create Jupyter directories
+  file: path={{ item }} state=directory mode=0755
+  with_items:
+    - "/home/{{ remote_user }}/.jupyter"
+    - "/home/{{ remote_user }}/notebooks"
+
+- name: copy Jupyter config file
+  template: src=jupyter_notebook_config.py dest=~/.jupyter/jupyter_notebook_config.py
+
+- name: Create init directory if it's not there
+  become: true
+  file: 
+    path: /etc/init
+    state: directory
+
+- name: Add upstart job for Jupyter-service
+  become: true
+  template:
+    src: jupyter-service.conf
+    dest: /etc/init/jupyter-service.conf
+  tags: run
+
+#- name: Start Jupyter-service
+#  become: true
+#  service:
+#    name: jupyter-service
+#    state: restarted
+#  tags: run

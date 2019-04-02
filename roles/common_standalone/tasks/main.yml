@@ -1,0 +1,13 @@
+---
+# tasks file for common_standalone
+- name: Install utilities
+  become: true
+  apt: pkg={{ item }} state=installed force=yes
+  with_items:
+    - htop
+
+- name: Install pip packages
+  become: true
+  pip: name={{ item }} state=latest
+  with_items:
+    - jupyter
