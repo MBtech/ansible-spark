@@ -1,21 +1,26 @@
-- name: Create instances on Amazon EC2
-  hosts: localhost
-  roles:
-  - create_spark_cluster
-
 - name: Install Python
   hosts: tag_ds_tech_spark
   gather_facts: False
   tasks:
     - name: Install Python
-      raw: sudo apt-get -y install python
+      shell: apt-get install python -y
+      become: yes
 
 - name: Install Java
   hosts: tag_ds_tech_spark
   roles:
-    - role: ansiblebit.oracle-java
-#    - role: mrlesmithjr.openjdk
+#    - role: ansiblebit.oracle-java
+#      oracle_java_deb_package: 'oracle-java8-installer'
+    - role: mrlesmithjr.openjdk
+      openjdk_version: 8
   tags: java
+
+- name: Set ssh config
+  hosts: all
+  tasks:
+    - name: Copy ssh config
+      copy: src=config dest=~/.ssh/config
+      become: yes
 
 - name: Install spark
   hosts: tag_ds_tech_spark
@@ -43,13 +48,3 @@
   roles:
   - { role: setup_hadoop, hadoop_type_of_node: master}
   tags: hadoop
-
-#- name: Install Hbase slave
-#  hosts: tag_ds_role_spark_slave
-#  roles:
-#  - { role: hbase, hbase_type_of_node: slave}
-
-#- name: Install Hbase Master
-#  hosts: tag_ds_role_spark_master
-#  roles:
-#  - { role: hbase, hbase_type_of_node: master}

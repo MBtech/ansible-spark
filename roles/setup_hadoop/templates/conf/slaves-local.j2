@@ -1,0 +1,7 @@
+# Hadoop datanode list
+
+#{{ hostvars[groups['tag_ds_role_spark_master'][0]].private_ip }}
+
+{% for host in groups['tag_ds_role_spark_slave'] %}
+{{ hostvars[host].private_ip }}
+{% endfor %}

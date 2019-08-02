@@ -1,20 +1,20 @@
 ---
 region: us-west-2
-instance_type: m5.xlarge
+instance_type: m5.4xlarge
 master_instance_type: m5.large
-slave_count: 4
+slave_count: 1
 ec2_key_pair: bilal_key
 
-#spot_price: 0.7
+spot_price: 0.30
 
-ec2_volume_size: 50
+ec2_volume_size: 100
 ec2_master_volume_size: 50
 
 boto_profile: default
-remote_user: ubuntu
+remote_user: mb
 
-spark_download_url: https://www-us.apache.org/dist/spark/spark-2.4.1/spark-2.4.1-bin-hadoop2.7.tgz
-spark_version: 2.4.1-bin-hadoop2.7
+spark_download_url: https://www-us.apache.org/dist/spark/spark-2.4.3/spark-2.4.3-bin-hadoop2.7.tgz
+spark_version: 2.4.3-bin-hadoop2.7
 spark_root: /opt/spark
 # spark_worker_port: 37700
 # spark_worker_port_end: 37800

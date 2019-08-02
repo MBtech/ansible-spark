@@ -1,16 +1,16 @@
 ---
 # tasks file for setup_hadoop
 - name: download Hadoop pre-built package
-  become: true
   get_url: url={{ hadoop_download_url }} dest="/tmp/hadoop-{{ hadoop_version }}.tgz"
+  become: yes
 
 - name: extract Hadoop archive
-  become: true
   unarchive: copy=no src="/tmp/hadoop-{{ hadoop_version }}.tgz" dest=/opt/
+  become: yes
 
 - name: create link to Hadoop directory
-  become: true
-  file: src=/opt/hadoop-{{ hadoop_version }} dest={{ hadoop_root }} state=link
+  file: src=/opt/hadoop-{{ hadoop_version }} dest={{ hadoop_root }} state=link force=yes
+  become: yes
 
 - name: add {{hadoop_root}}/bin to path
   become: true
@@ -29,28 +29,46 @@
 - name: config Hadoop core-site.xml
   become: true
   template: src=conf/core-site.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml" owner=root group=root
+  when: hostvars.localhost.spark_master is defined
+
+- name: config Hadoop core-site.xml
+  become: true
+  template: src=conf/core-site-local.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml" owner=root group=root
+  when: hostvars.localhost.spark_master is not defined
 
 - name: config Hadoop master
   become: true
   template: src=conf/masters.j2 dest="{{ hadoop_root }}/etc/hadoop/masters" owner=root group=root
+  when: hostvars.localhost.spark_master is defined
+
+- name: config Hadoop master
+  become: true
+  template: src=conf/masters-local.j2 dest="{{ hadoop_root }}/etc/hadoop/masters" owner=root group=root
+  when: hostvars.localhost.spark_master is not defined
 
 - name: config Hadoop slaves
   become: true
   template: src=conf/slaves.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves" owner=root group=root
+  when: hostvars.localhost.spark_master is defined
+
+- name: config Hadoop slaves
+  become: true
+  template: src=conf/slaves-local.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves" owner=root group=root
+  when: hostvars.localhost.spark_master is not defined
 
 - name: format Hadoop namenode
   become: true
-  command: "{{ hadoop_root }}/bin/hadoop namenode -format creates=/tmp/hadoop-root/dfs/name"
-  when: "hadoop_type_of_node == 'master'"
+  command: "{{ hadoop_root }}/bin/hdfs namenode -format creates=/tmp/hadoop-root/dfs/name"
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
 
 - name: attempt to stop Hadoop cluster
   become: true
   shell: "{{ hadoop_root }}/sbin/stop-dfs.sh"
   tags: run
-  when: "hadoop_type_of_node == 'master'"
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
 
 - name: attempt to start Hadoop cluster
   become: true
   shell: "{{ hadoop_root }}/sbin/start-dfs.sh"
   tags: run
-  when: "hadoop_type_of_node == 'master'"
+  when: inventory_hostname in groups['tag_ds_role_spark_master']

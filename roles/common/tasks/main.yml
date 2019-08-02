@@ -3,4 +3,4 @@
 
 - include: set_time_zone.yml
 - include: install_essentials.yml
-- include: install_java.yml
+#- include: install_java.yml

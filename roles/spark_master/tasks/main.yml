@@ -9,34 +9,73 @@
   fetch: src=/root/.ssh/id_rsa.pub dest=/tmp/id_rsa.tmp flat=yes
 
 - name: authorize master key on slaves
-  local_action: shell cat /tmp/id_rsa.tmp | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  local_action: shell cat /tmp/id_rsa.tmp | ssh {{ remote_user }}@{{ item.public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
   with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+  when: hostvars.localhost.spark_slave is defined 
+
+- name: authorize master key on slaves
+  local_action: shell cat /tmp/id_rsa.tmp | ssh {{ remote_user }}@{{ hostvars[item]['public_ip'] }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  with_items: "{{ groups['tag_ds_role_spark_slave'] }}"
+  when: hostvars.localhost.spark_slave is not defined
 
 - name: authorize master key on itself
-  local_action: shell cat /tmp/id_rsa.tmp | ssh ubuntu@{{ hostvars.localhost.spark_master.tagged_instances[0].public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  local_action: shell cat /tmp/id_rsa.tmp | ssh {{ remote_user }}@{{ hostvars.localhost.spark_master.tagged_instances[0].public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  when: hostvars.localhost.spark_master is defined
+
+- name: authorize master key on itself
+  local_action: shell cat /tmp/id_rsa.tmp | ssh {{ remote_user }}@{{ hostvars[groups['tag_ds_role_spark_master'][0]].public_ip }} "sudo su -c 'cat >> /root/.ssh/authorized_keys'"
+  when: hostvars.localhost.spark_master is not defined
 
 - name: delete temporary file
   local_action: file  path=/tmp/id_rsa.tmp state=absent
 
 - name: write SPARK_PUBLIC_DNS on master
-  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh {{ remote_user }}@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
   with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+  when: hostvars.localhost.spark_master is defined
+  tags: config_spark
+
+- name: write SPARK_PUBLIC_DNS on master
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ hostvars[item]['public_ip'] }}"' | ssh {{ remote_user }}@{{ hostvars[item]['public_ip'] }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  with_items: "{{ groups['tag_ds_role_spark_master'] }}"
+  when: hostvars.localhost.spark_master is not defined
   tags: config_spark
 
 - name: write SPARK_PUBLIC_DNS on slaves
-  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh ubuntu@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ item.public_ip }}"' | ssh {{ remote_user }}@{{ item.public_ip }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
   with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+  when: hostvars.localhost.spark_slave is defined
+  tags: config_spark
+
+- name: write SPARK_PUBLIC_DNS on slaves
+  local_action: shell echo 'export SPARK_PUBLIC_DNS="{{ hostvars[item]['public_ip'] }}"' | ssh {{ remote_user }}@{{ hostvars[item]['public_ip'] }} "sudo su -c 'cat >> {{ spark_root }}/conf/spark-env.sh'"
+  with_items: "{{ groups['tag_ds_role_spark_slave'] }}"
+  when: hostvars.localhost.spark_slave is not defined
   tags: config_spark
 
 - name: add all slaves to known_host
   become: true
   shell: ssh-keyscan -H {{ item.private_ip }} >> ~/.ssh/known_hosts
   with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+  when: hostvars.localhost.spark_slave is defined
+
+- name: add all slaves to known_host
+  become: true
+  shell: ssh-keyscan -H {{ hostvars[item]['public_ip'] }} >> ~/.ssh/known_hosts
+  with_items: "{{ groups['tag_ds_role_spark_slave'] }}"
+  when: hostvars.localhost.spark_slave is not defined
 
 - name: add itself to known_host
   become: true
   shell: ssh-keyscan -H {{ item.private_dns_name }} >> ~/.ssh/known_hosts
   with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+  when: hostvars.localhost.spark_master is defined
+
+- name: add itself to known_host
+  become: true
+  shell: ssh-keyscan -H {{ hostvars[item]['public_ip'] }} >> ~/.ssh/known_hosts
+  with_items: "{{ groups['tag_ds_role_spark_master'] }}"
+  when: hostvars.localhost.spark_master is not defined
 
 - name: add 0.0.0.0 (secondary namenode) to known_host
   become: true
@@ -45,6 +84,13 @@
 - name: populate conf/slaves file
   become: true
   template: src=conf/slaves.j2 dest={{ spark_root }}/conf/slaves
+  when: hostvars.localhost.spark_master is defined
+  tags: config_spark
+
+- name: populate conf/slaves file
+  become: true
+  template: src=conf/slaves_local.j2 dest={{ spark_root }}/conf/slaves
+  when: hostvars.localhost.spark_master is not defined
   tags: config_spark
 
 - name: attempt to stop Spark workers
