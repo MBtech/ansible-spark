@@ -1,16 +1,18 @@
-# Ansible: Spark standalone cluster on Amazon EC2
-This repository has been created by forking this [repo](https://github.com/phamthuonghai/ansible-spark-ec2). As ansible has been updated in the last few years and several other issues with the old repo, I decided to overhaul it. 
+# Ansible: Spark standalone cluster (on Amazon EC2 and local cluster)
+This repository has been created by forking this [repo](https://github.com/phamthuonghai/ansible-spark-ec2). As ansible has been updated in the last few years and several other issues with the old repo, I decided to overhaul it.
 
-## How to use
-* Install Ansible
-```
+## Prelims
+Install Ansible
+```bash
 sudo apt-get install software-properties-common
 sudo apt-add-repository ppa:ansible/ansible
 sudo apt-get update
 sudo apt-get install ansible
 ```
+
+### Setup for EC2
 * Install python boto package
-```
+```bash
 sudo apt-get install python-pip
 sudo pip install boto
 ```
@@ -25,27 +27,30 @@ aws_secret_access_key = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ./inventory/ec2.py --list
 ```
 * Add your keypair to Amazon EC2 (see http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws)
-* Set your variables in `./group_vars/all/main.yml`
-```yml
-region: us-west-2
-instance_type: m4.large
-slave_count: 2
-boto_profile: DSPlatform
-remote_user: ubuntu
 
-spark_download_url: http://d3kbcqa49mib13.cloudfront.net/spark-1.5.2-bin-hadoop2.6.tgz
-spark_version: 1.5.2-bin-hadoop2.6
-spark_root: /opt/spark
+## Configurations
+Take a look at following two configuration files. You will like need to make some changes there.
 
-hadoop_download_url: http://www-us.apache.org/dist/hadoop/common/hadoop-2.6.4/hadoop-2.6.4.tar.gz
-hadoop_version: 2.6.4
-hadoop_root: /opt/hadoop
+Set your variables in `./group_vars/all/main.yml`
+
+Set your ansible configurations in `ansible.cfg`
+
+## Start cluster on EC2
+Run the playbook
+``` bash
+ansible-playbook ds_platform.yaml
 ```
-* Run the playbook
-```
-ansible-playbook ds_platform.yaml 
+
+## Start Local Spark Cluster
+In order to configure a private Spark cluster, you will need to create the hosts inventory file.
+Take a look at `hosts.ini` as an example.
+
+The run the playbook using
+``` bash
+ansible-playbook -i <inventory_file> local_platform.yaml
 ```
 
 ### TODO:
+- A lot of things are creating using sudo when it's not necessary. Fix this issue.
 - Fix the service script for jupyter notebooks
-- Fix the Hbase install 
+- Fix the Hbase install
