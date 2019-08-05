@@ -11,7 +11,7 @@
 - name: Recursively change ownership of a hadoop directory
   become: yes
   file:
-    path: {{ hadoop_root }}-{{ hadoop_version }}
+    path: "{{ hadoop_root }}-{{ hadoop_version }}"
     state: directory
     recurse: yes
     owner: "{{ remote_user }}"

@@ -25,8 +25,8 @@ hadoop_version: 2.7.7
 hadoop_root: /opt/hadoop
 
 ## Memory settings for YARN containers
-nodemanager_memory: 15000
-scheduler_max_allocation: 15000
+nodemanager_memory: 30000
+scheduler_max_allocation: 30000
 
 hbase_download_url: http://www-us.apache.org/dist/hbase/stable/hbase-1.2.2-bin.tar.gz
 hbase_version: 1.2.2

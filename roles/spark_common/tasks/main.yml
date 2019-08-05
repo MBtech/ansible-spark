@@ -12,7 +12,7 @@
 - name: Recursively change ownership of a spark directory
   become: yes
   file:
-    path: {{ spark_root }}-{{ spark_version }}
+    path: "{{ spark_root }}-{{ spark_version }}"
     state: directory
     recurse: yes
     owner: "{{ remote_user }}"
@@ -20,7 +20,7 @@
 
 - name: create link to Spark directory
   become: yes
-  file: src={{ spark_root }}{{ spark_version }} dest={{ spark_root }} state=link owner={{ remote_user }} group={{ remote_user }}
+  file: src={{ spark_root }}-{{ spark_version }} dest={{ spark_root }} state=link owner={{ remote_user }} group={{ remote_user }}
 
 - name: configure Spark to run in standalone deploy mode
   # become: yes
