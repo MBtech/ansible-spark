@@ -1,0 +1,38 @@
+<configuration>
+<property>
+ <name>yarn.nodemanager.aux-services</name>
+ <value>mapreduce_shuffle</value>
+</property>
+<property>
+ <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
+ <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+</property>
+<property>
+ <name>yarn.resourcemanager.resource-tracker.address</name>
+ <value>{{ hostvars[groups['tag_ds_role_spark_master'][0]].private_ip }}:8025</value>
+</property>
+<property>
+ <name>yarn.resourcemanager.scheduler.address</name>
+ <value>{{ hostvars[groups['tag_ds_role_spark_master'][0]].private_ip }}:8030</value>
+</property>
+<property>
+ <name>yarn.resourcemanager.address</name>
+ <value>{{ hostvars[groups['tag_ds_role_spark_master'][0]].private_ip }}:8050</value>
+</property>
+
+<property>
+<name>yarn.nodemanager.vmem-check-enabled</name>
+<value>false</value>
+</property>
+
+<property>
+<name>yarn.nodemanager.resource.memory-mb</name>
+<value> {{ nodemanager_memory }} </value>
+</property>
+
+<property>
+<name>yarn.scheduler.maximum-allocation-mb</name>
+<value>{{ scheduler_max_allocation }}</value>
+</property>
+
+</configuration>

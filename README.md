@@ -51,6 +51,6 @@ ansible-playbook -i <inventory_file> local_platform.yaml
 ```
 
 ### TODO:
-- A lot of things are creating using sudo when it's not necessary. Fix this issue.
+- Separate the producer for a YARN cluster setup from a standalone Spark Setup
 - Fix the service script for jupyter notebooks
 - Fix the Hbase install

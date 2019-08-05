@@ -20,7 +20,7 @@
   tasks:
     - name: Copy ssh config
       copy: src=config dest=~/.ssh/config
-      become: yes
+      #become: yes
 
 - name: Install spark
   hosts: tag_ds_tech_spark
@@ -28,7 +28,7 @@
   - common
   - spark_common
   tags: spark
-  
+
 
 - name: Config spark master
   hosts: tag_ds_role_spark_master

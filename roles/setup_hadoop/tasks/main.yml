@@ -2,14 +2,23 @@
 # tasks file for setup_hadoop
 - name: download Hadoop pre-built package
   get_url: url={{ hadoop_download_url }} dest="/tmp/hadoop-{{ hadoop_version }}.tgz"
-  become: yes
+  # become: yes
 
 - name: extract Hadoop archive
   unarchive: copy=no src="/tmp/hadoop-{{ hadoop_version }}.tgz" dest=/opt/
   become: yes
 
+- name: Recursively change ownership of a hadoop directory
+  become: yes
+  file:
+    path: {{ hadoop_root }}-{{ hadoop_version }}
+    state: directory
+    recurse: yes
+    owner: "{{ remote_user }}"
+    group: "{{ remote_user }}"
+
 - name: create link to Hadoop directory
-  file: src=/opt/hadoop-{{ hadoop_version }} dest={{ hadoop_root }} state=link force=yes
+  file: src={{ hadoop_root }}-{{ hadoop_version }} dest={{ hadoop_root }} state=link force=yes owner={{ remote_user }} group={{ remote_user }}
   become: yes
 
 - name: add {{hadoop_root}}/bin to path
@@ -22,53 +31,82 @@
     line="PATH=\1\2:{{ hadoop_root }}/bin\3"
 
 - name: config Hadoop env
-  become: true
+  # become: true
   template: src=conf/hadoop-env.sh.j2 dest={{ hadoop_root }}/etc/hadoop/hadoop-env.sh mode="u=rwx,g=rx,o=rx"
   tags: config_hadoop
 
 - name: config Hadoop core-site.xml
-  become: true
-  template: src=conf/core-site.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml" owner=root group=root
+  # become: true
+  template: src=conf/core-site.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml"
   when: hostvars.localhost.spark_master is defined
 
 - name: config Hadoop core-site.xml
-  become: true
-  template: src=conf/core-site-local.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml" owner=root group=root
+  # become: true
+  template: src=conf/core-site-local.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml"
+  when: hostvars.localhost.spark_master is not defined
+
+- name: config Hadoop mapred-site.xml
+  # become: true
+  template: src=conf/mapred-site-local.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/mapred-site.xml"
+  when: hostvars.localhost.spark_master is not defined
+
+- name: config Hadoop yarn-site.xml
+  # become: true
+  template: src=conf/yarn-site-local.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/yarn-site.xml"
   when: hostvars.localhost.spark_master is not defined
 
 - name: config Hadoop master
-  become: true
-  template: src=conf/masters.j2 dest="{{ hadoop_root }}/etc/hadoop/masters" owner=root group=root
+  # become: true
+  template: src=conf/masters.j2 dest="{{ hadoop_root }}/etc/hadoop/masters"
   when: hostvars.localhost.spark_master is defined
 
 - name: config Hadoop master
-  become: true
-  template: src=conf/masters-local.j2 dest="{{ hadoop_root }}/etc/hadoop/masters" owner=root group=root
+  # become: true
+  template: src=conf/masters-local.j2 dest="{{ hadoop_root }}/etc/hadoop/masters"
   when: hostvars.localhost.spark_master is not defined
 
 - name: config Hadoop slaves
-  become: true
-  template: src=conf/slaves.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves" owner=root group=root
+  # become: true
+  template: src=conf/slaves.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves"
   when: hostvars.localhost.spark_master is defined
 
 - name: config Hadoop slaves
-  become: true
-  template: src=conf/slaves-local.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves" owner=root group=root
+  # become: true
+  template: src=conf/slaves-local.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves"
   when: hostvars.localhost.spark_master is not defined
 
 - name: format Hadoop namenode
-  become: true
-  command: "{{ hadoop_root }}/bin/hdfs namenode -format creates=/tmp/hadoop-root/dfs/name"
+  # become: true
+  command: echo 'Y' | "{{ hadoop_root }}/bin/hdfs namenode -format creates=/tmp/hadoop-root/dfs/name"
   when: inventory_hostname in groups['tag_ds_role_spark_master']
 
+######## YARN Related stuff (Separate with a tag)
+- name: Add spark to path
+  lineinfile: path=~/.profile line='PATH={{ spark_root }}/bin:$PATH'
+
+- name: Add hadoop lib to LD PATH
+  lineinfile: path=~/.profile line='export LD_LIBRARY_PATH={{ hadoop_root }}/lib/native:$LD_LIBRARY_PATH'
+
+- name: Add Spark home environment variable
+  lineinfile: path=~/.profile line='export SPARK_HOME={{ spark_root }}'
+
+- name: Add Hadoop conf environment variable
+  lineinfile: path=~/.profile line='export HADOOP_CONF_DIR={{ hadoop_root }}/etc/hadoop'
+########
 - name: attempt to stop Hadoop cluster
-  become: true
-  shell: "{{ hadoop_root }}/sbin/stop-dfs.sh"
+  # become: true
+  shell: "{{ hadoop_root }}/sbin/stop-all.sh"
   tags: run
   when: inventory_hostname in groups['tag_ds_role_spark_master']
 
 - name: attempt to start Hadoop cluster
-  become: true
+  # become: true
   shell: "{{ hadoop_root }}/sbin/start-dfs.sh"
+  tags: run
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
+
+- name: attempt to start Yarn cluster
+  # become: true
+  shell: "{{ hadoop_root }}/sbin/start-yarn.sh"
   tags: run
   when: inventory_hostname in groups['tag_ds_role_spark_master']
