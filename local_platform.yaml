@@ -29,7 +29,6 @@
   - spark_common
   tags: spark
 
-
 - name: Config spark master
   hosts: tag_ds_role_spark_master
   roles:

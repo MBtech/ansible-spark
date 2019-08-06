@@ -50,7 +50,12 @@ The run the playbook using
 ansible-playbook -i <inventory_file> local_platform.yaml
 ```
 
+The command above with setup hadoop, spark and start a YARN cluster. If you don't want to setup YARN then you can executed the following command instead
+``` bash
+ansible-playbook -i <inventory_file> local_platform.yaml --skip-tags "yarn"
+```
+
 ### TODO:
-- Separate the producer for a YARN cluster setup from a standalone Spark Setup
+- Use Terraform for creating cluster
 - Fix the service script for jupyter notebooks
 - Fix the Hbase install

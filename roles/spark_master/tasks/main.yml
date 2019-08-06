@@ -107,7 +107,7 @@
 - name: Copy spark defaults
   # become: true
   copy: src=spark-defaults.conf dest={{ spark_root }}/conf/spark-defaults.conf
-## Yarn specific
+  tags: yarn
 
 - name: create Jupyter directories
   file: path={{ item }} state=directory mode=0755
