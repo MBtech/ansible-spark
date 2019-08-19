@@ -1,0 +1,36 @@
+---
+# tasks file for setup_hadoop
+- name: download Hadoop pre-built package
+  get_url: url={{ hadoop_download_url }} dest="/tmp/hadoop-{{ hadoop_version }}.tgz"
+  # become: yes
+
+- name: extract Hadoop archive
+  unarchive: copy=no src="/tmp/hadoop-{{ hadoop_version }}.tgz" dest=/opt/
+  become: yes
+
+- name: Recursively change ownership of a hadoop directory
+  become: yes
+  file:
+    path: "{{ hadoop_root }}-{{ hadoop_version }}"
+    state: directory
+    recurse: yes
+    owner: "{{ remote_user }}"
+    group: "{{ remote_user }}"
+
+- name: create link to Hadoop directory
+  file: src={{ hadoop_root }}-{{ hadoop_version }} dest={{ hadoop_root }} state=link force=yes owner={{ remote_user }} group={{ remote_user }}
+  become: yes
+
+- name: add {{hadoop_root}}/bin to path
+  become: true
+  lineinfile:
+    dest=/etc/environment
+    state=present
+    backrefs=yes
+    regexp='PATH=(["]*)((?!.*?{{ hadoop_root }}/bin).*?)(["]*)$'
+    line="PATH=\1\2:{{ hadoop_root }}/bin\3"
+
+- name: config Hadoop env
+  # become: true
+  template: src=conf/hadoop-env.sh.j2 dest={{ hadoop_root }}/etc/hadoop/hadoop-env.sh mode="u=rwx,g=rx,o=rx"
+  tags: config_hadoop

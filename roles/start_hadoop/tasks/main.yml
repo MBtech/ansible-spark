@@ -1,0 +1,19 @@
+---
+- name: attempt to stop Hadoop cluster
+  # become: true
+  shell: "{{ hadoop_root }}/sbin/stop-all.sh"
+  tags: run
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
+
+- name: attempt to start Hadoop cluster
+  # become: true
+  shell: "{{ hadoop_root }}/sbin/start-dfs.sh"
+  tags: run
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
+
+- name: attempt to start Yarn cluster
+  # become: true
+  shell: "{{ hadoop_root }}/sbin/start-yarn.sh"
+  tags: run
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
+  tags: yarn

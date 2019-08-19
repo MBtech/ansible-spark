@@ -1,40 +1,4 @@
 ---
-# tasks file for setup_hadoop
-- name: download Hadoop pre-built package
-  get_url: url={{ hadoop_download_url }} dest="/tmp/hadoop-{{ hadoop_version }}.tgz"
-  # become: yes
-
-- name: extract Hadoop archive
-  unarchive: copy=no src="/tmp/hadoop-{{ hadoop_version }}.tgz" dest=/opt/
-  become: yes
-
-- name: Recursively change ownership of a hadoop directory
-  become: yes
-  file:
-    path: "{{ hadoop_root }}-{{ hadoop_version }}"
-    state: directory
-    recurse: yes
-    owner: "{{ remote_user }}"
-    group: "{{ remote_user }}"
-
-- name: create link to Hadoop directory
-  file: src={{ hadoop_root }}-{{ hadoop_version }} dest={{ hadoop_root }} state=link force=yes owner={{ remote_user }} group={{ remote_user }}
-  become: yes
-
-- name: add {{hadoop_root}}/bin to path
-  become: true
-  lineinfile:
-    dest=/etc/environment
-    state=present
-    backrefs=yes
-    regexp='PATH=(["]*)((?!.*?{{ hadoop_root }}/bin).*?)(["]*)$'
-    line="PATH=\1\2:{{ hadoop_root }}/bin\3"
-
-- name: config Hadoop env
-  # become: true
-  template: src=conf/hadoop-env.sh.j2 dest={{ hadoop_root }}/etc/hadoop/hadoop-env.sh mode="u=rwx,g=rx,o=rx"
-  tags: config_hadoop
-
 - name: config Hadoop core-site.xml
   # become: true
   template: src=conf/core-site.xml.j2 dest="{{ hadoop_root }}/etc/hadoop/core-site.xml"
@@ -76,6 +40,12 @@
   template: src=conf/slaves-local.j2 dest="{{ hadoop_root }}/etc/hadoop/slaves"
   when: hostvars.localhost.spark_master is not defined
 
+- name: attempt to stop Hadoop cluster
+  # become: true
+  shell: "{{ hadoop_root }}/sbin/stop-all.sh"
+  tags: run
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
+
 - name: format Hadoop namenode
   # become: true
   command: echo 'Y' | "{{ hadoop_root }}/bin/hdfs namenode -format creates=/tmp/hadoop-root/dfs/name"
@@ -84,31 +54,17 @@
 ######## YARN Related stuff (Separate with a tag)
 - name: Add spark to path
   lineinfile: path=~/.profile line='PATH={{ spark_root }}/bin:$PATH'
+  tags: yarn
 
 - name: Add hadoop lib to LD PATH
   lineinfile: path=~/.profile line='export LD_LIBRARY_PATH={{ hadoop_root }}/lib/native:$LD_LIBRARY_PATH'
+  tags: yarn
 
 - name: Add Spark home environment variable
   lineinfile: path=~/.profile line='export SPARK_HOME={{ spark_root }}'
+  tags: yarn
 
 - name: Add Hadoop conf environment variable
   lineinfile: path=~/.profile line='export HADOOP_CONF_DIR={{ hadoop_root }}/etc/hadoop'
-########
-- name: attempt to stop Hadoop cluster
-  # become: true
-  shell: "{{ hadoop_root }}/sbin/stop-all.sh"
-  tags: run
-  when: inventory_hostname in groups['tag_ds_role_spark_master']
-
-- name: attempt to start Hadoop cluster
-  # become: true
-  shell: "{{ hadoop_root }}/sbin/start-dfs.sh"
-  tags: run
-  when: inventory_hostname in groups['tag_ds_role_spark_master']
-
-- name: attempt to start Yarn cluster
-  # become: true
-  shell: "{{ hadoop_root }}/sbin/start-yarn.sh"
-  tags: run
-  when: inventory_hostname in groups['tag_ds_role_spark_master']
   tags: yarn
+########

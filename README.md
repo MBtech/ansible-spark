@@ -1,5 +1,8 @@
-# Ansible: Spark standalone cluster (on Amazon EC2 and local cluster)
+# Ansible: Spark cluster (on Amazon EC2 and local cluster)
 This repository has been created by forking this [repo](https://github.com/phamthuonghai/ansible-spark-ec2). As ansible has been updated in the last few years and several other issues with the old repo, I decided to overhaul it.
+
+## Compatibility:
+I have designed and tested these playbooks with Ansible 2.4.3 and it is supposed to work for  Ubuntu systems (both 16.04 and 18.04 should work but some other versions should be compatible too)
 
 ## Prelims
 Install Ansible
@@ -35,13 +38,13 @@ Set your variables in `./group_vars/all/main.yml`
 
 Set your ansible configurations in `ansible.cfg`
 
-## Start cluster on EC2
+## Setup and Start cluster on EC2
 Run the playbook
 ``` bash
-ansible-playbook ds_platform.yaml
+ansible-playbook -i inventory/ec2.py ds_platform.yaml
 ```
 
-## Start Local Spark Cluster
+## Setup and Start Local Spark Cluster
 In order to configure a private Spark cluster, you will need to create the hosts inventory file.
 Take a look at `hosts.ini` as an example.
 
@@ -55,7 +58,10 @@ The command above with setup hadoop, spark and start a YARN cluster. If you don'
 ansible-playbook -i <inventory_file> local_platform.yaml --skip-tags "yarn"
 ```
 
+## Start EC2 cluster with pre-existing AMI
+
 ### TODO:
+- Remove the use of ssh in spark setup 
 - Use Terraform for creating cluster
 - Fix the service script for jupyter notebooks
 - Fix the Hbase install

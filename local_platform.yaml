@@ -12,7 +12,7 @@
 #    - role: ansiblebit.oracle-java
 #      oracle_java_deb_package: 'oracle-java8-installer'
     - role: mrlesmithjr.openjdk
-      openjdk_version: 8
+      openjdk_version: "{{ jdk_version }}"
   tags: java
 
 - name: Set ssh config
@@ -27,7 +27,7 @@
   roles:
   - common
   - spark_common
-  tags: spark
+  tags: [ spark, ami]
 
 - name: Config spark master
   hosts: tag_ds_role_spark_master
@@ -36,14 +36,44 @@
   - spark_master
   tags: spark
 
+- name: Start Spark
+  hosts: tag_ds_role_spark_master
+  roles:
+  - start_spark
+  tags: spark
+
 - name: Install Hadoop slaves
+  hosts: tag_ds_role_spark_slave
+  roles:
+  - { role: download_hadoop, hadoop_type_of_node: slave}
+  tags: [ hadoop, ami ]
+
+- name: Setup Hadoop slaves
   hosts: tag_ds_role_spark_slave
   roles:
   - { role: setup_hadoop, hadoop_type_of_node: slave}
   tags: hadoop
 
+- name: Start Hadoop slaves
+  hosts: tag_ds_role_spark_slave
+  roles:
+  - { role: start_hadoop, hadoop_type_of_node: slave}
+  tags: hadoop
+
 - name: Install Hadoop master
   hosts: tag_ds_role_spark_master
   roles:
+  - { role: download_hadoop, hadoop_type_of_node: master}
+  tags: [ hadoop, ami ]
+
+- name: Setup Hadoop master
+  hosts: tag_ds_role_spark_master
+  roles:
   - { role: setup_hadoop, hadoop_type_of_node: master}
+  tags: hadoop
+
+- name: Start Hadoop master
+  hosts: tag_ds_role_spark_master
+  roles:
+  - { role: start_hadoop, hadoop_type_of_node: master}
   tags: hadoop

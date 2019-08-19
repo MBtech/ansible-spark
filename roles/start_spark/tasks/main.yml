@@ -1,0 +1,10 @@
+---
+- name: attempt to stop Spark workers
+  # become: true
+  shell: "{{ spark_root }}/sbin/stop-all.sh"
+  tags: run
+
+- name: attempt to start Spark cluster
+  # become: true
+  shell: "{{ spark_root }}/sbin/start-all.sh"
+  tags: run

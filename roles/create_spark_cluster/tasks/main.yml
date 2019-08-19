@@ -2,14 +2,14 @@
 # tasks file for create_spark_cluster
 - include: security_groups.yml
 
-- name: get the ubuntu trusty AMI
-  ec2_ami_search: distro=ubuntu release=bionic virt=hvm region={{ region }} store=ebs-ssd
-  register: ubuntu_image
-  tags: always
+# - name: get the ubuntu trusty AMI
+#   ec2_ami_search: distro=ubuntu release=bionic virt=hvm region={{ region }} store=ebs-ssd
+#   register: ubuntu_image
+#   tags: always
 
 - name: start the spark master
   ec2:
-    image: "{{ ubuntu_image.ami }}"
+    image: "{{ ubuntu_image_ami }}"
     region: "{{ region }}"
     instance_type: "{{ master_instance_type }}"
     profile: "{{ boto_profile }}"
@@ -29,7 +29,7 @@
 
 - name: start the spark slaves on spot instances
   ec2:
-    image: "{{ ubuntu_image.ami }}"
+    image: "{{ ubuntu_image_ami }}"
     region: "{{ region }}"
     instance_type: "{{ instance_type }}"
     profile: "{{ boto_profile }}"
@@ -39,6 +39,7 @@
     exact_count: "{{ slave_count }}"
     count_tag: { ds_role: spark_slave }
     spot_price: "{{ spot_price }}"
+    instance_initiated_shutdown_behavior: "terminate"
     volumes:
       - device_name: /dev/sda1
         volume_type: gp2
@@ -74,4 +75,3 @@
 
 - name: Refresh in-memory EC2 cache
   meta: refresh_inventory
-  

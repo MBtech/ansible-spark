@@ -1,17 +1,19 @@
 ---
 region: us-west-2
-instance_type: m5.4xlarge
+instance_type: m5.xlarge
 master_instance_type: m5.large
 slave_count: 1
 ec2_key_pair: bilal_key
 
+private_key_file : ~/Downloads/bilal_key.pem
 spot_price: 0.30
-
+# ubuntu_image_ami: ami-06f2f779464715dc5
+ubuntu_image_ami: ami-0f1f1130f8f002487
 ec2_volume_size: 100
 ec2_master_volume_size: 50
 
 boto_profile: default
-remote_user: mb
+remote_user: ubuntu
 
 spark_download_url: https://www-us.apache.org/dist/spark/spark-2.4.3/spark-2.4.3-bin-hadoop2.7.tgz
 spark_version: 2.4.3-bin-hadoop2.7
@@ -33,3 +35,5 @@ hbase_version: 1.2.2
 hbase_root: /opt/hbase
 
 inventory_dir: /etc/ansible/ec2.py
+
+jdk_version: 8
