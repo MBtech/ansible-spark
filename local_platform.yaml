@@ -5,6 +5,7 @@
     - name: Install Python
       shell: apt-get install python -y
       become: yes
+  tags: ami
 
 - name: Install Java
   hosts: tag_ds_tech_spark
@@ -13,7 +14,7 @@
 #      oracle_java_deb_package: 'oracle-java8-installer'
     - role: mrlesmithjr.openjdk
       openjdk_version: "{{ jdk_version }}"
-  tags: java
+  tags: [ java, ami ]
 
 - name: Set ssh config
   hosts: all

@@ -53,33 +53,36 @@
   when: hostvars.localhost.spark_slave is not defined
   tags: config_spark
 
-- name: add all slaves to known_host
-  # become: true
-  shell: ssh-keyscan -H {{ item.private_ip }} >> ~/.ssh/known_hosts
-  with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
-  when: hostvars.localhost.spark_slave is defined
+# - name: add all slaves to known_host
+#   # become: true
+#   shell: ssh-keyscan -H {{ item.private_ip }} >> ~/.ssh/known_hosts
+#   with_items: "{{ hostvars.localhost.spark_slave.tagged_instances }}"
+#   when: hostvars.localhost.spark_slave is defined
+#
+# - name: add all slaves to known_host
+#   # become: true
+#   shell: ssh-keyscan -H {{ hostvars[item]['public_ip'] }} >> ~/.ssh/known_hosts
+#   with_items: "{{ groups['tag_ds_role_spark_slave'] }}"
+#   when: hostvars.localhost.spark_slave is not defined
+#
+# - name: add itself to known_host
+#   # become: true
+#   shell: ssh-keyscan -H {{ item.private_dns_name }} >> ~/.ssh/known_hosts
+#   with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
+#   when: hostvars.localhost.spark_master is defined
+#
+# - name: add itself to known_host
+#   # become: true
+#   shell: ssh-keyscan -H {{ hostvars[item]['public_ip'] }} >> ~/.ssh/known_hosts
+#   with_items: "{{ groups['tag_ds_role_spark_master'] }}"
+#   when: hostvars.localhost.spark_master is not defined
+#
+# - name: add 0.0.0.0 (secondary namenode) to known_host
+#   # become: true
+#   shell: ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts
 
-- name: add all slaves to known_host
-  # become: true
-  shell: ssh-keyscan -H {{ hostvars[item]['public_ip'] }} >> ~/.ssh/known_hosts
-  with_items: "{{ groups['tag_ds_role_spark_slave'] }}"
-  when: hostvars.localhost.spark_slave is not defined
-
-- name: add itself to known_host
-  # become: true
-  shell: ssh-keyscan -H {{ item.private_dns_name }} >> ~/.ssh/known_hosts
-  with_items: "{{ hostvars.localhost.spark_master.tagged_instances }}"
-  when: hostvars.localhost.spark_master is defined
-
-- name: add itself to known_host
-  # become: true
-  shell: ssh-keyscan -H {{ hostvars[item]['public_ip'] }} >> ~/.ssh/known_hosts
-  with_items: "{{ groups['tag_ds_role_spark_master'] }}"
-  when: hostvars.localhost.spark_master is not defined
-
-- name: add 0.0.0.0 (secondary namenode) to known_host
-  # become: true
-  shell: ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts
+- name: Copy ssh config to master
+  copy: src=config dest=~/.ssh/config
 
 - name: populate conf/slaves file
   # become: true
@@ -93,10 +96,22 @@
   when: hostvars.localhost.spark_master is not defined
   tags: config_spark
 
-## YArn specific
+- name: Copy hadoop-aws library
+  # become: true
+  copy: src=hadoop-aws-2.7.3.jar dest={{ spark_root }}/jars/
+
+- name: Copy aws java sdk library
+  # become: true
+  copy: src=aws-java-sdk-1.7.4.jar dest={{ spark_root }}/jars/
+
 - name: Copy spark defaults
   # become: true
   copy: src=spark-defaults.conf dest={{ spark_root }}/conf/spark-defaults.conf
+
+## YArn specific
+- name: Copy spark defaults for YARN
+  # become: true
+  copy: src=yarn-spark-defaults.conf dest={{ spark_root }}/conf/spark-defaults.conf
   tags: yarn
 
 #===== Jupiter stuff that's not working atm ======

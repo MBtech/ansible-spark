@@ -1,5 +1,5 @@
 # Spark masters (as slaves) list
-{{ hostvars.localhost.spark_master.tagged_instances[0].private_ip }}
+# {{ hostvars.localhost.spark_master.tagged_instances[0].private_ip }}
 
 # Spark slaves list
 {% for host in hostvars.localhost.spark_slave.tagged_instances %}

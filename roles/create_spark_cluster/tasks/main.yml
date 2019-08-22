@@ -18,6 +18,7 @@
     instance_tags: { Name: spark_master, ds_tech: spark, ds_role: spark_master }
     exact_count: 1
     count_tag: { ds_role: spark_master }
+    instance_profile_name: "{{ instance_profile_arn }}"
     volumes:
       - device_name: /dev/sda1
         volume_type: gp2
@@ -40,6 +41,7 @@
     count_tag: { ds_role: spark_slave }
     spot_price: "{{ spot_price }}"
     instance_initiated_shutdown_behavior: "terminate"
+    instance_profile_name: "{{ instance_profile_arn }}"
     volumes:
       - device_name: /dev/sda1
         volume_type: gp2

@@ -59,9 +59,12 @@ ansible-playbook -i <inventory_file> local_platform.yaml --skip-tags "yarn"
 ```
 
 ## Start EC2 cluster with pre-existing AMI
+``` bash
+ansible-playbook -i inventory/ec2.py ds_platform.yaml --skip-tags "yarn,ami"
+```
 
 ### TODO:
-- Remove the use of ssh in spark setup 
+- Remove the use of ssh in spark setup
 - Use Terraform for creating cluster
 - Fix the service script for jupyter notebooks
 - Fix the Hbase install
