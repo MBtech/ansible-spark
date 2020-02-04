@@ -19,6 +19,8 @@
     exact_count: 1
     count_tag: { ds_role: spark_master }
     instance_profile_name: "{{ instance_profile_arn }}"
+    spot_price: "{{ spot_price }}"
+    instance_initiated_shutdown_behavior: "terminate"
     volumes:
       - device_name: /dev/sda1
         volume_type: gp2
@@ -51,6 +53,29 @@
   register: spark_slave
   tags: always
   when: spot_price is defined
+
+# - name: start the spark slaves on spot instances
+#   ec2:
+#     image: "{{ ubuntu_image_ami }}"
+#     region: "{{ region }}"
+#     instance_type: "{{ instance_type }}"
+#     profile: "{{ boto_profile }}"
+#     key_name: "{{ ec2_key_pair }}"
+#     group: [web, ssh, outbound, spark, hadoop]
+#     instance_tags: { Name: spark_slave, ds_tech: spark, ds_role: spark_slave }
+#     exact_count: "{{ slave_count }}"
+#     count_tag: { ds_role: spark_slave }
+#     instance_initiated_shutdown_behavior: "terminate"
+#     instance_profile_name: "{{ instance_profile_arn }}"
+#     volumes:
+#       - device_name: /dev/sda1
+#         volume_type: gp2
+#         volume_size: "{{ ec2_volume_size }}"
+#         delete_on_termination: true
+#     wait: yes
+#   register: spark_slave
+#   tags: always
+#   when: spot_price is not defined
 
 - name: Display spark master info
   debug:

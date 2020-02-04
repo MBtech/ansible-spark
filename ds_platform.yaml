@@ -7,8 +7,10 @@
   hosts: tag_ds_tech_spark
   gather_facts: False
   tasks:
+    - name: Add python apt repo
+      raw: sudo add-apt-repository -y ppa:deadsnakes/ppa && sudo apt update
     - name: Install Python
-      raw: sudo apt-get -y install python
+      raw: sudo apt-get -y install python3.7
   tags: ami
 
 - name: Install Java
@@ -27,6 +29,7 @@
   tags: [ spark, ami]
 
 - name: Config spark master
+  gather_facts: False
   hosts: tag_ds_role_spark_master
   roles:
   - common_standalone

@@ -2,12 +2,16 @@
 # tasks file for common_standalone
 - name: Install utilities
   become: true
-  apt: pkg={{ item }} state=installed force=yes
+  apt: pkg={{ item }} state=latest force=yes
   with_items:
     - htop
+  tags: ami
 
 - name: Install pip packages
   become: true
   pip: name={{ item }} state=latest
   with_items:
-    - jupyter
+    - paramiko-ng
+    - scp
+    # - jupyter
+  tags: [ami, extras]

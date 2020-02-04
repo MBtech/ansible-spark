@@ -1,6 +1,10 @@
+- name: Add apt repository
+  become: true 
+  apt_repository: repo='ppa:deadsnakes/ppa' state=present 
+
 - name: Install essentials
   become: true
-  apt: pkg={{ item }} state=installed update_cache=yes
+  apt: pkg={{ item }} state=latest update_cache=yes
   with_items:
     - build-essential
     - wget
@@ -8,24 +12,22 @@
     - gzip
     - libffi-dev
     - libssl-dev
-    - python
-    - python-dev
-    - python-pip
-    - libblas-dev 
-    - liblapack-dev 
-    - libatlas-base-dev 
+    - python3.7
+    - python3-pip
+    - libblas-dev
+    - liblapack-dev
+    - libatlas-base-dev
     - gfortran
-    - python3
+    - sysstat
+    - python3-csvkit
+    - openjdk-8-jdk-headless
 
-- name: Install pip packages
-  become: true
-  pip: name={{ item }} state=latest
-  with_items:
-    - setuptools
-    - numpy
-    - pandas
-    - numexpr
-    - urllib3
-    - pyOpenSSL
-    - ndg-httpsclient
-    - pyasn1
+- name: install the package, force upgrade
+  pip:
+    name: pip
+    executable: pip3
+    state: latest
+
+#- name: Install pip packages
+#  become: true
+#  pip: name=['setuptools','numpy','pandas','numexpr','urllib3','pyOpenSSL','ndg-httpsclient','pyasn1'] state=latest executable=pip3

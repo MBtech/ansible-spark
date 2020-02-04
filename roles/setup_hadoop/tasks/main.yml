@@ -48,7 +48,12 @@
 
 - name: format Hadoop namenode
   # become: true
-  command: echo 'Y' | "{{ hadoop_root }}/bin/hdfs namenode -format creates=/tmp/hadoop-root/dfs/name"
+  command: echo 'Y' | "{{ hadoop_root }}/bin/hdfs namenode -format"
+  when: inventory_hostname in groups['tag_ds_role_spark_master']
+
+- name: format Hadoop namenode
+  # become: true
+  shell: "echo 'Y' | {{ hadoop_root }}/bin/hdfs namenode -format" 
   when: inventory_hostname in groups['tag_ds_role_spark_master']
 
 ######## YARN Related stuff (Separate with a tag)
